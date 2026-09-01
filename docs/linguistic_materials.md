@@ -126,3 +126,79 @@ For example:
 speaker_role = junior_analyst
 addressee_role = director
 power_relation = lower_to_higher
+
+
+## 12. Core lexical-formality strategy
+
+The primary synthetic experiment will not use natural-English synonyms
+as the main manipulation of lexical formality.
+
+Instead, each underlying semantic item will initially receive two
+synthetic lexical realizations:
+
+- a lower-register realization;
+- a higher-register realization.
+
+The two realizations will have identical meanings by construction.
+
+For example, an abstract action such as `SEND` may eventually receive
+two artificial lexical forms that differ only in their assigned
+register function.
+
+The actual synthetic vocabulary will be generated systematically rather
+than chosen from the illustrative examples in this document.
+
+### Why synthetic lexical pairs are used
+
+Natural-language pairs such as `send` and `forward` may differ in
+meaning, collocation, frequency, or other properties in addition to
+formality.
+
+Synthetic lexical pairs allow semantic meaning to remain exactly
+constant while lexical register varies.
+
+This provides ground truth for the mechanistic analysis.
+
+### Natural-language replication
+
+Natural-English lexical contrasts will be introduced only in the later
+pretrained-model replication.
+
+This will allow the project to separate:
+
+1. a high-control synthetic mechanistic study;
+2. a lower-control but more ecologically valid natural-language study.
+
+## 13. Conditional-generation requirement
+
+Every training example must contain sufficient information for the
+model to determine the intended register realization.
+
+The same semantic and social context must not map unpredictably to
+multiple incompatible target forms.
+
+The toy-language generator will therefore include controlled latent
+cues specifying the intended register configuration.
+
+These cues will use neutral synthetic symbols rather than natural
+labels such as `formal`, `polite`, or `indirect`.
+
+This prevents the experiment from giving the model the linguistic
+interpretation directly.
+
+The exact cue system will be defined before implementation.
+
+## 14. Decisions remaining before implementation
+
+The following must still be defined:
+
+- synthetic vocabulary construction;
+- neutral control-cue system;
+- direct-request templates;
+- indirect-request templates;
+- mitigation strategies;
+- categorical assertion templates;
+- hedged assertion templates;
+- train and test template allocation;
+- dataset sizes;
+- lexical OOD design.
