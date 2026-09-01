@@ -16,8 +16,8 @@ from register_feature_family.schemas import (
     PolitenessMitigation,
     PowerRelation,
     Regime,
-    Split,
     SpeechAct,
+    Split,
 )
 
 
