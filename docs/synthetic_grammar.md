@@ -425,6 +425,18 @@ synthetic hedged assertion
 
 These are structural illustrations, not final training examples.
 
+## Synthetic vocabulary generation rules
+
+The full toy-language vocabulary will be generated programmatically
+rather than selected manually.
+
+### Word shape
+
+Initial lexical forms will use the pattern:
+
+```text
+CVCV
+
 ## 19. Decisions remaining before implementation
 
 Before Python implementation begins, the following must still be fixed:
