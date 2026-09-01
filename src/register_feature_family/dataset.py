@@ -10,8 +10,8 @@ from register_feature_family.generator import generate_record
 from register_feature_family.schemas import (
     DatasetRecord,
     Regime,
-    Split,
     SpeechAct,
+    Split,
 )
 
 
