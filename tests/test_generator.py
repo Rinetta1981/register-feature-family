@@ -8,8 +8,8 @@ from register_feature_family.generator import (
 from register_feature_family.schemas import (
     PowerRelation,
     Regime,
-    Split,
     SpeechAct,
+    Split,
 )
 
 
