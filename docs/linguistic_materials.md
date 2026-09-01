@@ -128,7 +128,7 @@ addressee_role = director
 power_relation = lower_to_higher
 
 
-## 12. Core lexical-formality strategy
+## 6. Core lexical-formality strategy
 
 The primary synthetic experiment will not use natural-English synonyms
 as the main manipulation of lexical formality.
@@ -169,7 +169,7 @@ This will allow the project to separate:
 1. a high-control synthetic mechanistic study;
 2. a lower-control but more ecologically valid natural-language study.
 
-## 13. Conditional-generation requirement
+## 7. Conditional-generation requirement
 
 Every training example must contain sufficient information for the
 model to determine the intended register realization.
@@ -188,7 +188,7 @@ interpretation directly.
 
 The exact cue system will be defined before implementation.
 
-## 14. Decisions remaining before implementation
+## 8. Decisions remaining before implementation
 
 The following must still be defined:
 
