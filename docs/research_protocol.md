@@ -43,6 +43,16 @@ an open pretrained language model.
 
 ## 3. Controlled variables
 
+### Operational definition of register
+
+For this synthetic study, register is operationalized as the joint
+configuration of lexical formality, syntactic directness, politeness
+mitigation, and epistemic stance in a specified speaker–addressee power
+relation.
+
+Register will therefore not be treated as a single observable label.
+Each component will be generated, measured, and evaluated separately.
+
 ### 3.1 Propositional content
 
 Propositional content is the action or claim communicated by an
