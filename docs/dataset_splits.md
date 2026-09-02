@@ -85,3 +85,36 @@ Before implementation, the project must define:
 - which assertion register combinations are held out compositionally;
 - validation and IID allocation rules;
 - final split-size targets.
+
+## 10. Full-study content scale
+
+The confirmatory synthetic study will use:
+
+- 16 request content items;
+- 16 assertion content items.
+
+The current two-request and two-assertion codebook is a software pilot
+only and will not be used as the final confirmatory dataset.
+
+### Why 16 per speech act
+
+This provides enough semantic items to reserve a meaningful lexical-OOD
+subset while retaining a substantial in-distribution training pool.
+
+For each speech act:
+
+- 12 content items will form the in-distribution content pool;
+- 4 content items will be reserved for lexical OOD evaluation.
+
+## 11. Lexical-OOD assignment
+
+The final content inventory will be frozen before lexical-OOD items are
+selected.
+
+Within requests and assertions separately, content IDs will be ordered
+using a deterministic procedure based on a fixed split seed.
+
+The split seed will be:
+
+```text
+2026
