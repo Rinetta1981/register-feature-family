@@ -1,0 +1,37 @@
+name: Freeze Dataset
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  freeze:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install project
+        run: python -m pip install -e ".[dev]"
+
+      - name: Build and audit frozen dataset
+        run: python scripts/freeze_dataset.py
+
+      - name: Show frozen manifest
+        run: cat data/frozen/v0.1/manifest.json
+
+      - name: Upload frozen dataset
+        uses: actions/upload-artifact@v4
+        with:
+          name: register-feature-family-dataset-v0.1
+          path: data/frozen/v0.1/
+          if-no-files-found: error
+          retention-days: 90
