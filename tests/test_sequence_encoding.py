@@ -1,7 +1,9 @@
 import pytest
 
+from register_feature_family.dataset_v02 import (
+    generate_confirmatory_records_v02,
+)
 from register_feature_family.experimental_generator import (
-    generate_confirmatory_records,
     generate_lexical_familiarization,
 )
 from register_feature_family.sequence_encoding import (
@@ -21,7 +23,7 @@ from register_feature_family.tokenizer import (
 
 def test_confirmatory_sequence_matches_protocol() -> None:
     tokenizer = ClosedVocabularyTokenizer()
-    record = generate_confirmatory_records(seed=0)[0]
+    record = generate_confirmatory_records_v02(seed=0)[0]
 
     encoded = encode_confirmatory_record(
         record,
@@ -69,7 +71,7 @@ def test_familiarization_sequence_matches_protocol() -> None:
 
 def test_confirmatory_loss_is_target_only() -> None:
     tokenizer = ClosedVocabularyTokenizer()
-    record = generate_confirmatory_records(seed=0)[0]
+    record = generate_confirmatory_records_v02(seed=0)[0]
 
     encoded = encode_confirmatory_record(
         record,
@@ -107,7 +109,7 @@ def test_confirmatory_loss_is_target_only() -> None:
 
 def test_first_target_token_is_supervised() -> None:
     tokenizer = ClosedVocabularyTokenizer()
-    record = generate_confirmatory_records(seed=0)[0]
+    record = generate_confirmatory_records_v02(seed=0)[0]
 
     encoded = encode_confirmatory_record(
         record,
@@ -126,7 +128,7 @@ def test_first_target_token_is_supervised() -> None:
 
 
 def test_supervised_count_is_target_plus_eos() -> None:
-    record = generate_confirmatory_records(seed=0)[0]
+    record = generate_confirmatory_records_v02(seed=0)[0]
 
     encoded = encode_confirmatory_record(record)
 
@@ -139,7 +141,7 @@ def test_supervised_count_is_target_plus_eos() -> None:
 
 
 def test_all_confirmatory_sequences_fit_length_limit() -> None:
-    records = generate_confirmatory_records(seed=0)
+    records = generate_confirmatory_records_v02(seed=0)
 
     lengths = [
         encode_confirmatory_record(
@@ -149,7 +151,7 @@ def test_all_confirmatory_sequences_fit_length_limit() -> None:
     ]
 
     assert max(lengths) <= MAX_SEQUENCE_LENGTH
-    assert max(lengths) == 12
+    assert max(lengths) == 14
 
 
 def test_all_familiarization_sequences_fit_length_limit() -> None:
@@ -167,7 +169,7 @@ def test_all_familiarization_sequences_fit_length_limit() -> None:
 
 
 def test_encoding_is_deterministic() -> None:
-    record = generate_confirmatory_records(seed=0)[0]
+    record = generate_confirmatory_records_v02(seed=0)[0]
 
     first = encode_confirmatory_record(record)
     second = encode_confirmatory_record(record)
