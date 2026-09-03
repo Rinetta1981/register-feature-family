@@ -104,8 +104,10 @@ def test_audit_detects_confirmatory_file_tampering(
         sort_keys=True,
     )
 
+    tampered_text = "\n".join(lines) + "\n"
+
     confirmatory_path.write_text(
-        f"{'\n'.join(lines)}\n",
+        tampered_text,
         encoding="utf-8",
         newline="\n",
     )
