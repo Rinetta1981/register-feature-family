@@ -229,7 +229,7 @@ def _train_epoch(
             batch.labels
         )
 
-        loss.backward()
+        torch.autograd.backward(loss)
 
         torch.nn.utils.clip_grad_norm_(
             model.parameters(),
