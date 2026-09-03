@@ -229,8 +229,8 @@ def audit_dataset_bundle_v02(
 
     actual_split_counts = {
         split.value: sum(
-            record.split == split
-            for record in confirmatory_records
+            confirmatory_record.split == split
+            for confirmatory_record in confirmatory_records
         )
         for split in Split
     }
@@ -320,18 +320,23 @@ def audit_dataset_bundle_v02(
     training_control_combinations: set[
         tuple[str, str, str]
     ] = set()
+
     training_control_tokens: set[str] = set()
     opaque_request_codes_seen: set[str] = set()
+
     invalid_control_combinations: set[
         tuple[str, str, str]
     ] = set()
 
-    for record in confirmatory_records:
-        if record.speech_act != SpeechAct.REQUEST:
+    for confirmatory_record in confirmatory_records:
+        if (
+            confirmatory_record.speech_act
+            != SpeechAct.REQUEST
+        ):
             continue
 
         context_tokens = tuple(
-            record.context_text.split()
+            confirmatory_record.context_text.split()
         )
 
         opaque_request_codes_seen.update(
@@ -357,7 +362,7 @@ def audit_dataset_bundle_v02(
                 controls
             )
 
-        if record.split == Split.TRAIN:
+        if confirmatory_record.split == Split.TRAIN:
             training_control_combinations.add(
                 controls
             )
@@ -398,20 +403,20 @@ def audit_dataset_bundle_v02(
 
     training_tokens: set[str] = set()
 
-    for record in familiarization_records:
+    for familiarization_record in familiarization_records:
         training_tokens.update(
             _record_tokens(
-                record.context_text,
-                record.target_text,
+                familiarization_record.context_text,
+                familiarization_record.target_text,
             )
         )
 
-    for record in confirmatory_records:
-        if record.split == Split.TRAIN:
+    for confirmatory_record in confirmatory_records:
+        if confirmatory_record.split == Split.TRAIN:
             training_tokens.update(
                 _record_tokens(
-                    record.context_text,
-                    record.target_text,
+                    confirmatory_record.context_text,
+                    confirmatory_record.target_text,
                 )
             )
 
@@ -430,16 +435,19 @@ def audit_dataset_bundle_v02(
         for split in evaluation_splits
     }
 
-    for record in confirmatory_records:
-        if record.split not in evaluation_splits:
+    for confirmatory_record in confirmatory_records:
+        if (
+            confirmatory_record.split
+            not in evaluation_splits
+        ):
             continue
 
         unsupported_by_split[
-            record.split
+            confirmatory_record.split
         ].update(
             _record_tokens(
-                record.context_text,
-                record.target_text,
+                confirmatory_record.context_text,
+                confirmatory_record.target_text,
             )
             - training_tokens
         )
