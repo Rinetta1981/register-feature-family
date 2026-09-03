@@ -1,5 +1,5 @@
-import torch
 import pytest
+import torch
 
 from register_feature_family.experimental_generator import (
     generate_confirmatory_records,
