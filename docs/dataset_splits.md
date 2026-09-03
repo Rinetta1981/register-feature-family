@@ -76,6 +76,13 @@ seed.
 The same configuration must always produce exactly the same split
 membership.
 
+Lexical-transfer content items and their surface forms may appear only
+in neutral vocabulary-familiarization examples and must not appear in
+register-conditioned training examples
+
+Lexical-transfer content IDs must not appear in register-conditioned
+training, validation, IID, or compositional-OOD examples
+
 ## 9. Next decisions
 
 Before implementation, the project must define:
@@ -118,3 +125,25 @@ The split seed will be:
 
 ```text
 2026
+
+## 12. Amendment: lexical-transfer familiarization
+
+The lexical-OOD design requires one additional distinction between
+lexical familiarity and register-conditioned familiarity.
+
+A model cannot reasonably be expected to generate a synthetic lexical
+form that has never appeared anywhere during training.
+
+The four lexical-transfer content items in each speech-act family will
+therefore participate in a neutral vocabulary-familiarization stage.
+
+### Familiarization examples
+
+For every semantic item, the model will encounter both artificial
+lexical variants under neutral variant identifiers.
+
+Conceptually:
+
+```text
+<LEX> <CONTENT_13> <VAR0> -> synthetic form A
+<LEX> <CONTENT_13> <VAR1> -> synthetic form B
