@@ -292,19 +292,24 @@ def audit_dataset_bundle(
             in REQUEST_LEXICAL_TRANSFER_HOLDOUTS
         )
 
-        if is_frozen_bundle and is_lexical_holdout:
-            compositional_errors.append(record.example_id)
-        elif (
-            is_frozen_bundle
-            and record.split
-            != Split.COMPOSITIONAL_OOD_TEST
-        ):
-            compositional_errors.append(record.example_id)
-        elif (
-            not is_frozen_bundle
-            and record.split
-            == Split.COMPOSITIONAL_OOD_TEST
-        ):
+        invalid_compositional_membership = (
+            (
+                is_frozen_bundle
+                and is_lexical_holdout
+            )
+            or (
+                is_frozen_bundle
+                and record.split
+                != Split.COMPOSITIONAL_OOD_TEST
+            )
+            or (
+                not is_frozen_bundle
+                and record.split
+                == Split.COMPOSITIONAL_OOD_TEST
+            )
+        )
+
+        if invalid_compositional_membership:
             compositional_errors.append(record.example_id)
 
     _check(
