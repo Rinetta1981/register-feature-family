@@ -1,8 +1,8 @@
 import pytest
 import torch
 
-from register_feature_family.experimental_generator import (
-    generate_confirmatory_records,
+from register_feature_family.dataset_v02 import (
+    generate_confirmatory_records_v02,
 )
 from register_feature_family.model import (
     CausalSelfAttention,
@@ -28,13 +28,13 @@ def test_default_transformer_configuration() -> None:
     assert config.d_mlp == 512
     assert config.head_dimension == 32
     assert config.max_sequence_length == 16
-    assert config.vocab_size == 156
+    assert config.vocab_size == 154
 
 
 def test_default_parameter_count_is_frozen() -> None:
     model = DecoderOnlyTransformer()
 
-    assert model.trainable_parameter_count() == 438784
+    assert model.trainable_parameter_count() == 438272
 
 
 def test_embeddings_and_unembedding_are_not_tied() -> None:
@@ -229,7 +229,7 @@ def test_real_encoded_example_produces_finite_loss() -> None:
     torch.manual_seed(0)
 
     tokenizer = ClosedVocabularyTokenizer()
-    record = generate_confirmatory_records(
+    record = generate_confirmatory_records_v02(
         seed=0
     )[0]
 
@@ -264,7 +264,7 @@ def test_real_encoded_example_produces_finite_loss() -> None:
 def test_loss_backpropagates_through_model() -> None:
     torch.manual_seed(0)
 
-    record = generate_confirmatory_records(
+    record = generate_confirmatory_records_v02(
         seed=0
     )[0]
 
