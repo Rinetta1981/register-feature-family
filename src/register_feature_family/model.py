@@ -1,5 +1,6 @@
 import math
 from dataclasses import dataclass
+from typing import cast
 
 import torch
 import torch.nn.functional as F
@@ -143,14 +144,27 @@ class CausalSelfAttention(nn.Module):
 
         batch_size, sequence_length, _ = x.shape
 
+        query_projection = cast(
+            torch.Tensor,
+            self.q_proj(x),
+        )
+        key_projection = cast(
+            torch.Tensor,
+            self.k_proj(x),
+        )
+        value_projection = cast(
+            torch.Tensor,
+            self.v_proj(x),
+        )
+
         queries = self._split_heads(
-            self.q_proj(x)
+            query_projection
         )
         keys = self._split_heads(
-            self.k_proj(x)
+            key_projection
         )
         values = self._split_heads(
-            self.v_proj(x)
+            value_projection
         )
 
         scores = torch.matmul(
@@ -220,7 +234,10 @@ class CausalSelfAttention(nn.Module):
             attended_values
         )
 
-        output = self.out_proj(merged)
+        output = cast(
+            torch.Tensor,
+            self.out_proj(merged),
+        )
 
         return output, attention_pattern
 
@@ -267,10 +284,19 @@ class FeedForward(nn.Module):
     ) -> torch.Tensor:
         """Apply the transformer MLP."""
 
-        return self.fc_out(
-            self.activation(
-                self.fc_in(x)
-            )
+        hidden = cast(
+            torch.Tensor,
+            self.fc_in(x),
+        )
+
+        activated = cast(
+            torch.Tensor,
+            self.activation(hidden),
+        )
+
+        return cast(
+            torch.Tensor,
+            self.fc_out(activated),
         )
 
 
@@ -305,7 +331,10 @@ class TransformerBlock(nn.Module):
     ) -> torch.Tensor:
         """Apply attention and MLP residual updates."""
 
-        attention_input = self.ln1(x)
+        attention_input = cast(
+            torch.Tensor,
+            self.ln1(x),
+        )
 
         attention_output = self.attention(
             attention_input,
@@ -314,198 +343,14 @@ class TransformerBlock(nn.Module):
 
         x = x + attention_output
 
-        mlp_input = self.ln2(x)
+        mlp_input = cast(
+            torch.Tensor,
+            self.ln2(x),
+        )
         mlp_output = self.mlp(mlp_input)
 
         return x + mlp_output
 
 
 class DecoderOnlyTransformer(nn.Module):
-    """Small decoder-only transformer for the synthetic experiment."""
-
-    def __init__(
-        self,
-        config: TransformerConfig | None = None,
-    ) -> None:
-        super().__init__()
-
-        self.config = (
-            config
-            if config is not None
-            else TransformerConfig()
-        )
-
-        self.token_embedding = nn.Embedding(
-            self.config.vocab_size,
-            self.config.d_model,
-        )
-
-        self.position_embedding = nn.Embedding(
-            self.config.max_sequence_length,
-            self.config.d_model,
-        )
-
-        self.blocks = nn.ModuleList(
-            [
-                TransformerBlock(self.config)
-                for _ in range(
-                    self.config.n_layers
-                )
-            ]
-        )
-
-        self.final_ln = nn.LayerNorm(
-            self.config.d_model
-        )
-
-        self.unembedding = nn.Linear(
-            self.config.d_model,
-            self.config.vocab_size,
-            bias=False,
-        )
-
-    def forward(
-        self,
-        input_ids: torch.Tensor,
-        *,
-        attention_mask: torch.Tensor | None = None,
-    ) -> torch.Tensor:
-        """Return next-token logits for every sequence position."""
-
-        if input_ids.ndim != 2:
-            raise ValueError(
-                "input_ids must have shape "
-                "batch x sequence"
-            )
-
-        batch_size, sequence_length = (
-            input_ids.shape
-        )
-
-        if sequence_length < 1:
-            raise ValueError(
-                "sequence length must be positive"
-            )
-
-        if (
-            sequence_length
-            > self.config.max_sequence_length
-        ):
-            raise ValueError(
-                "sequence exceeds configured maximum length"
-            )
-
-        if attention_mask is not None:
-            expected_shape = (
-                batch_size,
-                sequence_length,
-            )
-
-            if attention_mask.shape != expected_shape:
-                raise ValueError(
-                    "attention_mask must have shape "
-                    "batch x sequence"
-                )
-
-        positions = torch.arange(
-            sequence_length,
-            device=input_ids.device,
-        )
-
-        token_embeddings = self.token_embedding(
-            input_ids
-        )
-
-        position_embeddings = (
-            self.position_embedding(
-                positions
-            ).unsqueeze(0)
-        )
-
-        hidden = (
-            token_embeddings
-            + position_embeddings
-        )
-
-        for block in self.blocks:
-            hidden = block(
-                hidden,
-                attention_mask=attention_mask,
-            )
-
-        hidden = self.final_ln(hidden)
-
-        return self.unembedding(hidden)
-
-    def trainable_parameter_count(self) -> int:
-        """Return the number of trainable parameters."""
-
-        return sum(
-            parameter.numel()
-            for parameter in self.parameters()
-            if parameter.requires_grad
-        )
-
-
-def causal_lm_loss(
-    *,
-    logits: torch.Tensor,
-    labels: torch.Tensor,
-    ignore_index: int = IGNORE_INDEX,
-) -> torch.Tensor:
-    """Compute shifted next-token loss on supervised positions."""
-
-    if logits.ndim != 3:
-        raise ValueError(
-            "logits must have shape "
-            "batch x sequence x vocabulary"
-        )
-
-    if labels.ndim != 2:
-        raise ValueError(
-            "labels must have shape "
-            "batch x sequence"
-        )
-
-    if logits.shape[:2] != labels.shape:
-        raise ValueError(
-            "logits and labels must share "
-            "batch and sequence dimensions"
-        )
-
-    if logits.shape[1] < 2:
-        raise ValueError(
-            "sequence must contain at least two tokens"
-        )
-
-    shifted_logits = (
-        logits[:, :-1, :]
-        .contiguous()
-    )
-
-    shifted_labels = (
-        labels[:, 1:]
-        .contiguous()
-    )
-
-    has_supervised_token = bool(
-        torch.any(
-            shifted_labels != ignore_index
-        ).item()
-    )
-
-    if not has_supervised_token:
-        raise ValueError(
-            "labels contain no supervised tokens"
-        )
-
-    vocabulary_size = logits.shape[-1]
-
-    return F.cross_entropy(
-        shifted_logits.view(
-            -1,
-            vocabulary_size,
-        ),
-        shifted_labels.view(-1),
-        ignore_index=ignore_index,
-    )
+    """Small decoder-only transformer for the synthetic experiment
