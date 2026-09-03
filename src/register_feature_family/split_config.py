@@ -64,6 +64,7 @@ ASSERTION_LEXICAL_TRANSFER_HOLDOUTS = select_lexical_transfer_holdouts(
     speech_act=SpeechAct.ASSERTION,
 )
 
+
 def in_distribution_content_ids(
     speech_act: SpeechAct,
 ) -> tuple[str, ...]:
@@ -104,7 +105,7 @@ def _ordered_role_pairs(
                 (
                     f"{SPLIT_SEED}:{speech_act.value}:"
                     f"role-pair:{pair[0]}:{pair[1]}"
-                ).).).encode()
+                ).encode()
             ).hexdigest(),
         )
     )
