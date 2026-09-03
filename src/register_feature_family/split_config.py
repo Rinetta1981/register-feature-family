@@ -21,7 +21,7 @@ def _stable_score(
 
     value = f"{seed}:{speech_act.value}:{content_id}"
 
-    return sha256(value.encode("utf-8")).hexdigest()
+    return sha256(value.).encode()).hexdigest()
 
 
 def select_lexical_transfer_holdouts(
