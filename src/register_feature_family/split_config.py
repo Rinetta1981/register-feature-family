@@ -1,14 +1,43 @@
 from hashlib import sha256
 
-from register_feature_family.codebook import ROLE_CODES
+from register_feature_family.codebook import (
+    COMPOSITE_REGISTER_CODES,
+    ROLE_CODES,
+)
 from register_feature_family.content_inventory import (
     ASSERTION_CONTENT_IDS,
     REQUEST_CONTENT_IDS,
 )
-from register_feature_family.schemas import SpeechAct, Split
+from register_feature_family.schemas import (
+    Directness,
+    LexicalFormality,
+    PolitenessMitigation,
+    SpeechAct,
+    Split,
+)
 
 SPLIT_SEED = 2026
 LEXICAL_TRANSFER_HOLDOUTS_PER_SPEECH_ACT = 4
+
+REQUEST_COMPOSITIONAL_OOD_FEATURES: tuple[
+    tuple[
+        LexicalFormality,
+        Directness,
+        PolitenessMitigation,
+    ],
+    ...,
+] = (
+    (
+        LexicalFormality.LESS_FORMAL,
+        Directness.INDIRECT,
+        PolitenessMitigation.MITIGATED,
+    ),
+    (
+        LexicalFormality.MORE_FORMAL,
+        Directness.DIRECT,
+        PolitenessMitigation.BARE,
+    ),
+)
 
 
 def _stable_score(
@@ -63,6 +92,76 @@ ASSERTION_LEXICAL_TRANSFER_HOLDOUTS = select_lexical_transfer_holdouts(
     content_ids=ASSERTION_CONTENT_IDS,
     speech_act=SpeechAct.ASSERTION,
 )
+
+
+def request_compositional_ood_codes() -> tuple[str, ...]:
+    """Return request codes withheld for compositional OOD evaluation."""
+
+    codes = [
+        code
+        for code, config in COMPOSITE_REGISTER_CODES.items()
+        if config.speech_act == SpeechAct.REQUEST
+        and (
+            config.lexical_formality,
+            config.directness,
+            config.politeness_mitigation,
+        )
+        in REQUEST_COMPOSITIONAL_OOD_FEATURES
+    ]
+
+    return tuple(sorted(codes))
+
+
+REQUEST_COMPOSITIONAL_OOD_CODES = request_compositional_ood_codes()
+
+
+def training_supported_register_codes(
+    speech_act: SpeechAct,
+) -> tuple[str, ...]:
+    """Return register codes permitted in ordinary training."""
+
+    family_codes = tuple(
+        sorted(
+            code
+            for code, config in COMPOSITE_REGISTER_CODES.items()
+            if config.speech_act == speech_act
+        )
+    )
+
+    if speech_act == SpeechAct.REQUEST:
+        return tuple(
+            code
+            for code in family_codes
+            if code not in REQUEST_COMPOSITIONAL_OOD_CODES
+        )
+
+    if speech_act == SpeechAct.ASSERTION:
+        return family_codes
+
+    raise ValueError(f"Unsupported speech act: {speech_act}")
+
+
+def is_compositional_ood_register_code(
+    *,
+    register_code: str,
+    speech_act: SpeechAct,
+) -> bool:
+    """Return whether a register code is a compositional OOD holdout."""
+
+    if register_code not in COMPOSITE_REGISTER_CODES:
+        raise ValueError(f"Unknown register code: {register_code}")
+
+    config = COMPOSITE_REGISTER_CODES[register_code]
+
+    if config.speech_act != speech_act:
+        raise ValueError(
+            f"{register_code} does not belong to {speech_act.value}"
+        )
+
+    return (
+        speech_act == SpeechAct.REQUEST
+        and register_code in REQUEST_COMPOSITIONAL_OOD_CODES
+    )
 
 
 def in_distribution_content_ids(
