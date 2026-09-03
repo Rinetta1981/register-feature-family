@@ -214,7 +214,7 @@ class TransformerBlock(nn.Module):
         mlp_input = cast(torch.Tensor, self.ln2(x))
         mlp_output = self.mlp(mlp_input)
 
-        return x + mlp_output
+        return cast(torch.Tensor, x + mlp_output)
 
 
 class DecoderOnlyTransformer(nn.Module):
@@ -356,4 +356,4 @@ def causal_lm_loss(
         ignore_index=ignore_index,
     )
 
-    return cast(torch.Tensor, loss)
+    return loss
