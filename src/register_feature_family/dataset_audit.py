@@ -172,8 +172,8 @@ def audit_dataset_bundle(
     issues: list[str] = []
 
     split_counter = Counter(
-        record.split
-        for record in confirmatory
+        confirmatory_record.split
+        for confirmatory_record in confirmatory
     )
 
     split_counts = {
@@ -200,13 +200,13 @@ def audit_dataset_bundle(
     )
 
     confirmatory_ids = [
-        record.example_id
-        for record in confirmatory
+        confirmatory_record.example_id
+        for confirmatory_record in confirmatory
     ]
 
     familiarization_ids = [
-        record.example_id
-        for record in familiarization
+        familiarization_record.example_id
+        for familiarization_record in familiarization
     ]
 
     _check(
@@ -227,10 +227,10 @@ def audit_dataset_bundle(
     )
 
     lexical_leaks = [
-        record.example_id
-        for record in confirmatory
-        if record.content_id in lexical_holdouts
-        and record.split != Split.LEXICAL_OOD_TEST
+        confirmatory_record.example_id
+        for confirmatory_record in confirmatory
+        if confirmatory_record.content_id in lexical_holdouts
+        and confirmatory_record.split != Split.LEXICAL_OOD_TEST
     ]
 
     _check(
@@ -247,11 +247,11 @@ def audit_dataset_bundle(
 
     group_splits: dict[str, set[Split]] = defaultdict(set)
 
-    for record in confirmatory:
-        if record.split in ordinary_splits:
-            group_splits[record.comparison_group_id].add(
-                record.split
-            )
+    for confirmatory_record in confirmatory:
+        if confirmatory_record.split in ordinary_splits:
+            group_splits[
+                confirmatory_record.comparison_group_id
+            ].add(confirmatory_record.split)
 
     split_groups = [
         group_id
@@ -271,16 +271,21 @@ def audit_dataset_bundle(
 
     compositional_errors: list[str] = []
 
-    for record in confirmatory:
-        if record.speech_act == SpeechAct.ASSERTION:
-            if record.split == Split.COMPOSITIONAL_OOD_TEST:
-                compositional_errors.append(record.example_id)
+    for confirmatory_record in confirmatory:
+        if confirmatory_record.speech_act == SpeechAct.ASSERTION:
+            if (
+                confirmatory_record.split
+                == Split.COMPOSITIONAL_OOD_TEST
+            ):
+                compositional_errors.append(
+                    confirmatory_record.example_id
+                )
             continue
 
         feature_bundle = (
-            record.lexical_formality,
-            record.directness,
-            record.politeness_mitigation,
+            confirmatory_record.lexical_formality,
+            confirmatory_record.directness,
+            confirmatory_record.politeness_mitigation,
         )
 
         is_frozen_bundle = (
@@ -288,7 +293,7 @@ def audit_dataset_bundle(
         )
 
         is_lexical_holdout = (
-            record.content_id
+            confirmatory_record.content_id
             in REQUEST_LEXICAL_TRANSFER_HOLDOUTS
         )
 
@@ -299,18 +304,20 @@ def audit_dataset_bundle(
             )
             or (
                 is_frozen_bundle
-                and record.split
+                and confirmatory_record.split
                 != Split.COMPOSITIONAL_OOD_TEST
             )
             or (
                 not is_frozen_bundle
-                and record.split
+                and confirmatory_record.split
                 == Split.COMPOSITIONAL_OOD_TEST
             )
         )
 
         if invalid_compositional_membership:
-            compositional_errors.append(record.example_id)
+            compositional_errors.append(
+                confirmatory_record.example_id
+            )
 
     _check(
         not compositional_errors,
@@ -319,8 +326,8 @@ def audit_dataset_bundle(
     )
 
     familiarization_targets = [
-        record.target_text
-        for record in familiarization
+        familiarization_record.target_text
+        for familiarization_record in familiarization
     ]
 
     _check(
@@ -347,29 +354,34 @@ def audit_dataset_bundle(
     register_codes = set(COMPOSITE_REGISTER_CODES)
     role_codes = set(ROLE_CODES.values())
 
-    for record in familiarization:
-        variants_by_content[record.content_id].add(
-            record.variant_code
-        )
+    for familiarization_record in familiarization:
+        variants_by_content[
+            familiarization_record.content_id
+        ].add(familiarization_record.variant_code)
 
-        tokens = record.context_text.split()
+        tokens = familiarization_record.context_text.split()
 
         expected_content_code = CONTENT_CODE_BY_ID.get(
-            record.content_id
+            familiarization_record.content_id
         )
 
         if (
             len(tokens) != 3
             or tokens[0] != LEXICAL_FAMILIARIZATION_CODE
-            or record.content_code != expected_content_code
-            or tokens[1] != record.content_code
-            or tokens[2] != record.variant_code.value
+            or familiarization_record.content_code
+            != expected_content_code
+            or tokens[1]
+            != familiarization_record.content_code
+            or tokens[2]
+            != familiarization_record.variant_code.value
             or not register_codes.isdisjoint(tokens)
             or not role_codes.isdisjoint(tokens)
             or "<REQ>" in tokens
             or "<AST>" in tokens
         ):
-            neutral_errors.append(record.example_id)
+            neutral_errors.append(
+                familiarization_record.example_id
+            )
 
     expected_variants = set(FamiliarizationVariant)
 
