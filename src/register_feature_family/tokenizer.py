@@ -20,6 +20,9 @@ from register_feature_family.experimental_generator import (
     SPEECH_ACT_CODE_BY_VALUE,
     FamiliarizationVariant,
 )
+from register_feature_family.request_controls import (
+    REQUEST_CONTROL_TOKENS,
+)
 from register_feature_family.schemas import SpeechAct
 
 PAD_TOKEN = "<PAD>"
@@ -55,9 +58,19 @@ CONTENT_TOKENS: tuple[str, ...] = tuple(
     sorted(CONTENT_CODE_BY_ID.values())
 )
 
-REGISTER_TOKENS: tuple[str, ...] = tuple(
-    sorted(COMPOSITE_REGISTER_CODES)
+ASSERTION_REGISTER_TOKENS: tuple[str, ...] = (
+    "<C08>",
+    "<C09>",
+    "<C10>",
+    "<C11>",
 )
+
+if not set(ASSERTION_REGISTER_TOKENS) <= set(
+    COMPOSITE_REGISTER_CODES
+):
+    raise RuntimeError(
+        "assertion register vocabulary is inconsistent with codebook"
+    )
 
 GRAMMAR_MARKER_TOKENS: tuple[str, ...] = (
     INDIRECT_MARKER,
@@ -75,7 +88,8 @@ MODEL_VOCABULARY: tuple[str, ...] = (
     + FAMILIARIZATION_TOKENS
     + ROLE_TOKENS
     + CONTENT_TOKENS
-    + REGISTER_TOKENS
+    + ASSERTION_REGISTER_TOKENS
+    + REQUEST_CONTROL_TOKENS
     + GRAMMAR_MARKER_TOKENS
     + SURFACE_FORM_TOKENS
 )
@@ -110,7 +124,10 @@ class ClosedVocabularyTokenizer:
                 "vocabulary tokens must not contain outer whitespace"
             )
 
-        if any(any(char.isspace() for char in token) for token in vocabulary):
+        if any(
+            any(char.isspace() for char in token)
+            for token in vocabulary
+        ):
             raise ValueError(
                 "vocabulary tokens must not contain whitespace"
             )
@@ -163,7 +180,9 @@ class ClosedVocabularyTokenizer:
 
         text = "\n".join(self._tokens) + "\n"
 
-        return hashlib.sha256(text.encode()).hexdigest()
+        return hashlib.sha256(
+            text.encode()
+        ).hexdigest()
 
     def token_id(self, token: str) -> int:
         """Return one token's integer ID."""
@@ -223,4 +242,6 @@ class ClosedVocabularyTokenizer:
     ) -> str:
         """Decode integer IDs to whitespace-separated text."""
 
-        return " ".join(self.decode_ids(token_ids))
+        return " ".join(
+            self.decode_ids(token_ids)
+        )
