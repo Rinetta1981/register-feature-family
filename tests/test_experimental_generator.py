@@ -34,14 +34,11 @@ from register_feature_family.split_config import (
 )
 
 
-def test_confirmatory_generator_has_expected_size() -> None:
+def test_confirmatory_dataset_matches_protocol() -> None:
     records = generate_confirmatory_records(seed=0)
 
     assert len(records) == 1656
 
-
-def test_confirmatory_split_counts_match_protocol() -> None:
-    records = generate_confirmatory_records(seed=0)
     counts = Counter(record.split for record in records)
 
     assert counts == {
@@ -52,23 +49,23 @@ def test_confirmatory_split_counts_match_protocol() -> None:
         Split.LEXICAL_OOD_TEST: 360,
     }
 
-
-def test_confirmatory_example_ids_are_globally_unique() -> None:
-    records = generate_confirmatory_records(seed=0)
     example_ids = [record.example_id for record in records]
 
     assert len(example_ids) == len(set(example_ids))
 
 
-def test_contexts_use_neutral_content_codes() -> None:
+def test_confirmatory_contexts_use_neutral_codes() -> None:
     records = generate_confirmatory_records(seed=0)
+    valid_role_codes = set(ROLE_CODES.values())
 
     for record in records:
-        content_code = CONTENT_CODE_BY_ID[record.content_id]
         tokens = record.context_text.split()
+        content_code = CONTENT_CODE_BY_ID[record.content_id]
 
         assert content_code in tokens
         assert record.content_id not in tokens
+        assert tokens[1] in valid_role_codes
+        assert tokens[2] in valid_role_codes
 
         if record.speech_act == SpeechAct.REQUEST:
             assert tokens[0] == "<REQ>"
@@ -76,32 +73,20 @@ def test_contexts_use_neutral_content_codes() -> None:
             assert tokens[0] == "<AST>"
 
 
-def test_contexts_use_valid_role_codes() -> None:
-    records = generate_confirmatory_records(seed=0)
-    valid_role_codes = set(ROLE_CODES.values())
-
-    for record in records:
-        tokens = record.context_text.split()
-
-        assert tokens[1] in valid_role_codes
-        assert tokens[2] in valid_role_codes
-
-
-def test_lexical_transfer_contents_only_enter_lexical_ood() -> None:
+def test_lexical_transfer_items_do_not_leak() -> None:
     records = generate_confirmatory_records(seed=0)
 
-    request_holdouts = set(REQUEST_LEXICAL_TRANSFER_HOLDOUTS)
-    assertion_holdouts = set(ASSERTION_LEXICAL_TRANSFER_HOLDOUTS)
+    holdouts = (
+        set(REQUEST_LEXICAL_TRANSFER_HOLDOUTS)
+        | set(ASSERTION_LEXICAL_TRANSFER_HOLDOUTS)
+    )
 
     for record in records:
-        if (
-            record.content_id in request_holdouts
-            or record.content_id in assertion_holdouts
-        ):
+        if record.content_id in holdouts:
             assert record.split == Split.LEXICAL_OOD_TEST
 
 
-def test_joint_request_ood_example_is_excluded() -> None:
+def test_joint_request_ood_is_excluded() -> None:
     record = generate_experimental_record(
         content_id=REQUEST_LEXICAL_TRANSFER_HOLDOUTS[0],
         speech_act=SpeechAct.REQUEST,
@@ -113,97 +98,76 @@ def test_joint_request_ood_example_is_excluded() -> None:
     assert record is None
 
 
-def test_request_targets_match_register_configuration() -> None:
+def test_request_targets_match_register_features() -> None:
     records = generate_confirmatory_records(seed=0)
 
-    request_records = [
-        record
-        for record in records
-        if record.speech_act == SpeechAct.REQUEST
-    ]
+    for record in records:
+        if record.speech_act != SpeechAct.REQUEST:
+            continue
 
-    for record in request_records:
         register_code = record.context_text.split()[-1]
         config = COMPOSITE_REGISTER_CODES[register_code]
         content = EXPERIMENTAL_REQUEST_CONTENT[record.content_id]
-        target_tokens = record.target_text.split()
+        tokens = record.target_text.split()
 
-        expected_verb = content.verb.select(
-            config.lexical_formality
-        )
-
-        assert expected_verb in target_tokens
-        assert content.object_form in target_tokens
+        assert content.verb.select(config.lexical_formality) in tokens
+        assert content.object_form in tokens
 
         assert (
-            INDIRECT_MARKER in target_tokens
+            INDIRECT_MARKER in tokens
         ) == (
             config.directness == Directness.INDIRECT
         )
 
         assert (
-            MITIGATION_MARKER in target_tokens
+            MITIGATION_MARKER in tokens
         ) == (
             config.politeness_mitigation
             == PolitenessMitigation.MITIGATED
         )
 
 
-def test_assertion_targets_match_register_configuration() -> None:
+def test_assertion_targets_match_register_features() -> None:
     records = generate_confirmatory_records(seed=0)
 
-    assertion_records = [
-        record
-        for record in records
-        if record.speech_act == SpeechAct.ASSERTION
-    ]
+    for record in records:
+        if record.speech_act != SpeechAct.ASSERTION:
+            continue
 
-    for record in assertion_records:
         register_code = record.context_text.split()[-1]
         config = COMPOSITE_REGISTER_CODES[register_code]
         content = EXPERIMENTAL_ASSERTION_CONTENT[record.content_id]
-        target_tokens = record.target_text.split()
+        tokens = record.target_text.split()
 
-        expected_predicate = content.predicate.select(
+        assert content.subject_form in tokens
+        assert content.predicate.select(
             config.lexical_formality
-        )
-
-        assert content.subject_form in target_tokens
-        assert expected_predicate in target_tokens
+        ) in tokens
 
         assert (
-            HEDGE_MARKER in target_tokens
+            HEDGE_MARKER in tokens
         ) == (
             config.epistemic_stance == EpistemicStance.HEDGED
         )
 
 
-def test_familiarization_has_96_records() -> None:
+def test_familiarization_has_complete_neutral_coverage() -> None:
     records = generate_lexical_familiarization()
 
     assert len(records) == 96
 
+    content_counts = Counter(
+        record.content_id for record in records
+    )
 
-def test_each_content_has_three_familiarization_mappings() -> None:
-    records = generate_lexical_familiarization()
-    counts = Counter(record.content_id for record in records)
+    assert len(content_counts) == 32
+    assert set(content_counts.values()) == {3}
 
-    assert len(counts) == 32
-    assert set(counts.values()) == {3}
-
-
-def test_familiarization_covers_every_surface_form_once() -> None:
-    records = generate_lexical_familiarization()
     targets = [record.target_text for record in records]
-    expected = experimental_surface_forms()
 
-    assert len(targets) == 96
     assert len(set(targets)) == 96
-    assert set(targets) == set(expected)
+    assert set(targets) == set(experimental_surface_forms())
 
-
-def test_familiarization_contexts_are_neutral() -> None:
-    records = generate_lexical_familiarization()
     register_codes = set(COMPOSITE_REGISTER_CODES)
     role_codes = set(ROLE_CODES.values())
 
@@ -230,4 +194,43 @@ def test_lexical_transfer_contents_are_familiarized() -> None:
 
 def test_familiarization_is_deterministic() -> None:
     first = generate_lexical_familiarization()
-    second = generate_lex
+    second = generate_lexical_familiarization()
+
+    assert first == second
+
+
+def test_variant_swap_reverses_var0_and_var1_only() -> None:
+    default = generate_lexical_familiarization()
+    swapped = generate_lexical_familiarization(
+        swap_variants=True
+    )
+
+    default_map = {
+        (record.content_id, record.variant_code): record.target_text
+        for record in default
+    }
+    swapped_map = {
+        (record.content_id, record.variant_code): record.target_text
+        for record in swapped
+    }
+
+    content_ids = {record.content_id for record in default}
+
+    for content_id in content_ids:
+        assert default_map[
+            (content_id, FamiliarizationVariant.VAR0)
+        ] == swapped_map[
+            (content_id, FamiliarizationVariant.VAR1)
+        ]
+
+        assert default_map[
+            (content_id, FamiliarizationVariant.VAR1)
+        ] == swapped_map[
+            (content_id, FamiliarizationVariant.VAR0)
+        ]
+
+        assert default_map[
+            (content_id, FamiliarizationVariant.FIXED)
+        ] == swapped_map[
+            (content_id, FamiliarizationVariant.FIXED)
+        ]
