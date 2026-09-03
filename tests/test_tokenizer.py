@@ -1,9 +1,6 @@
 import pytest
 
-from register_feature_family.codebook import (
-    COMPOSITE_REGISTER_CODES,
-    ROLE_CODES,
-)
+from register_feature_family.codebook import ROLE_CODES
 from register_feature_family.content_inventory import (
     ALL_CONTENT_IDS,
     CONTENT_CODE_BY_ID,
@@ -11,7 +8,12 @@ from register_feature_family.content_inventory import (
 from register_feature_family.experimental_codebook import (
     experimental_surface_forms,
 )
+from register_feature_family.request_controls import (
+    REQUEST_COMPOSITE_CODES,
+    REQUEST_CONTROL_TOKENS,
+)
 from register_feature_family.tokenizer import (
+    ASSERTION_REGISTER_TOKENS,
     BOS_TOKEN,
     EOS_TOKEN,
     MODEL_VOCABULARY,
@@ -22,8 +24,8 @@ from register_feature_family.tokenizer import (
 
 
 def test_model_vocabulary_has_expected_size() -> None:
-    assert len(MODEL_VOCABULARY) == 156
-    assert len(set(MODEL_VOCABULARY)) == 156
+    assert len(MODEL_VOCABULARY) == 154
+    assert len(set(MODEL_VOCABULARY)) == 154
 
 
 def test_special_token_ids_are_fixed() -> None:
@@ -56,10 +58,26 @@ def test_all_role_codes_are_in_vocabulary() -> None:
     )
 
 
-def test_all_register_codes_are_in_vocabulary() -> None:
+def test_assertion_register_codes_are_in_vocabulary() -> None:
     tokenizer = ClosedVocabularyTokenizer()
 
-    assert set(COMPOSITE_REGISTER_CODES) <= set(
+    assert set(ASSERTION_REGISTER_TOKENS) <= set(
+        tokenizer.vocabulary
+    )
+
+
+def test_request_composite_codes_are_not_model_tokens() -> None:
+    tokenizer = ClosedVocabularyTokenizer()
+
+    assert set(REQUEST_COMPOSITE_CODES).isdisjoint(
+        tokenizer.vocabulary
+    )
+
+
+def test_request_control_tokens_are_in_vocabulary() -> None:
+    tokenizer = ClosedVocabularyTokenizer()
+
+    assert set(REQUEST_CONTROL_TOKENS) <= set(
         tokenizer.vocabulary
     )
 
@@ -85,7 +103,8 @@ def test_encode_decode_round_trip() -> None:
 
     text = (
         "<BOS> <REQ> <ROLE_01> <ROLE_03> "
-        "<CONTENT_01> <C00> <SEP> <EOS>"
+        "<CONTENT_01> <RC1_0> <RC2_0> <RC3_0> "
+        "<SEP> <EOS>"
     )
 
     encoded = tokenizer.encode_text(text)
