@@ -191,24 +191,24 @@ def experimental_surface_forms() -> tuple[str, ...]:
     forms: list[str] = []
 
     for content_id in REQUEST_CONTENT_IDS:
-        content = EXPERIMENTAL_REQUEST_CONTENT[content_id]
+        request_item = EXPERIMENTAL_REQUEST_CONTENT[content_id]
 
         forms.extend(
             (
-                content.verb.less_formal,
-                content.verb.more_formal,
-                content.object_form,
+                request_item.verb.less_formal,
+                request_item.verb.more_formal,
+                request_item.object_form,
             )
         )
 
     for content_id in ASSERTION_CONTENT_IDS:
-        content = EXPERIMENTAL_ASSERTION_CONTENT[content_id]
+        assertion_item = EXPERIMENTAL_ASSERTION_CONTENT[content_id]
 
         forms.extend(
             (
-                content.subject_form,
-                content.predicate.less_formal,
-                content.predicate.more_formal,
+                assertion_item.subject_form,
+                assertion_item.predicate.less_formal,
+                assertion_item.predicate.more_formal,
             )
         )
 
