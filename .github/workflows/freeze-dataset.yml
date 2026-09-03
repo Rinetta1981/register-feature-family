@@ -1,6 +1,9 @@
 name: Freeze Dataset
 
 on:
+  push:
+    branches:
+      - dataset-audit
   workflow_dispatch:
 
 permissions:
