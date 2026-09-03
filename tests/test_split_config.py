@@ -16,3 +16,8 @@ from register_feature_family.split_config import (
     select_lexical_transfer_holdouts,
 )
 
+
+def test_request_holdouts_are_frozen() -> None:
+
+
+
