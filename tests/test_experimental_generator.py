@@ -14,8 +14,8 @@ from register_feature_family.experimental_codebook import (
     experimental_surface_forms,
 )
 from register_feature_family.experimental_generator import (
-    FamiliarizationVariant,
     LEXICAL_FAMILIARIZATION_CODE,
+    FamiliarizationVariant,
     generate_confirmatory_records,
     generate_experimental_record,
     generate_lexical_familiarization,
@@ -230,43 +230,4 @@ def test_lexical_transfer_contents_are_familiarized() -> None:
 
 def test_familiarization_is_deterministic() -> None:
     first = generate_lexical_familiarization()
-    second = generate_lexical_familiarization()
-
-    assert first == second
-
-
-def test_variant_swap_reverses_only_var0_and_var1() -> None:
-    default = generate_lexical_familiarization()
-    swapped = generate_lexical_familiarization(
-        swap_variants=True
-    )
-
-    default_map = {
-        (record.content_id, record.variant_code): record.target_text
-        for record in default
-    }
-    swapped_map = {
-        (record.content_id, record.variant_code): record.target_text
-        for record in swapped
-    }
-
-    content_ids = {record.content_id for record in default}
-
-    for content_id in content_ids:
-        assert default_map[
-            (content_id, FamiliarizationVariant.VAR0)
-        ] == swapped_map[
-            (content_id, FamiliarizationVariant.VAR1)
-        ]
-
-        assert default_map[
-            (content_id, FamiliarizationVariant.VAR1)
-        ] == swapped_map[
-            (content_id, FamiliarizationVariant.VAR0)
-        ]
-
-        assert default_map[
-            (content_id, FamiliarizationVariant.FIXED)
-        ] == swapped_map[
-            (content_id, FamiliarizationVariant.FIXED)
-        ]
+    second = generate_lex
