@@ -104,7 +104,7 @@ def _ordered_role_pairs(
                 (
                     f"{SPLIT_SEED}:{speech_act.value}:"
                     f"role-pair:{pair[0]}:{pair[1]}"
-                ).encode("utf-8")
+                ).).).encode()
             ).hexdigest(),
         )
     )
