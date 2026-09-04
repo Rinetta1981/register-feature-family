@@ -10,7 +10,6 @@ from register_feature_family.behavioral_evaluation import (
     score_prediction,
     seed_passes_behavioral_gate,
 )
-
 from register_feature_family.dataset_v02 import (
     generate_confirmatory_records_v02,
 )
