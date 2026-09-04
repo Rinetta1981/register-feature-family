@@ -156,6 +156,14 @@ def test_expected_validation_target_scores_perfectly() -> None:
         record.target_text.split()
     )
 
+    expected_surfaces = tuple(
+        token
+        for token in generated_tokens
+        if token in surface_to_content
+    )
+
+    assert len(expected_surfaces) > 1
+
     score = score_prediction(
         record=record,
         generated_tokens=generated_tokens,
@@ -193,14 +201,18 @@ def test_wrong_variant_preserves_content_but_fails_register() -> None:
         record.target_text.split()
     )
 
-    expected_surface = next(
+    expected_surfaces = tuple(
         token
         for token in expected_tokens
         if token in surface_to_content
     )
 
+    surface_to_replace = (
+        expected_surfaces[0]
+    )
+
     content_code = surface_to_content[
-        expected_surface
+        surface_to_replace
     ]
 
     alternative_surface = next(
@@ -209,13 +221,13 @@ def test_wrong_variant_preserves_content_but_fails_register() -> None:
             surface_to_content.items()
         )
         if content == content_code
-        and surface != expected_surface
+        and surface not in expected_surfaces
     )
 
     generated_tokens = tuple(
         (
             alternative_surface
-            if token == expected_surface
+            if token == surface_to_replace
             else token
         )
         for token in expected_tokens
@@ -236,6 +248,74 @@ def test_wrong_variant_preserves_content_but_fails_register() -> None:
     assert (
         score.lexical_formality_correct_given_content
         is False
+    )
+
+
+def test_wrong_content_family_fails_content() -> None:
+    familiarization_records = (
+        generate_lexical_familiarization(
+            swap_variants=False
+        )
+    )
+
+    surface_to_content = (
+        build_surface_to_content(
+            familiarization_records
+        )
+    )
+
+    record = _validation_record()
+
+    expected_tokens = tuple(
+        record.target_text.split()
+    )
+
+    expected_surfaces = tuple(
+        token
+        for token in expected_tokens
+        if token in surface_to_content
+    )
+
+    surface_to_replace = (
+        expected_surfaces[0]
+    )
+
+    expected_content = surface_to_content[
+        surface_to_replace
+    ]
+
+    wrong_surface = next(
+        surface
+        for surface, content in (
+            surface_to_content.items()
+        )
+        if content != expected_content
+    )
+
+    generated_tokens = tuple(
+        (
+            wrong_surface
+            if token == surface_to_replace
+            else token
+        )
+        for token in expected_tokens
+    )
+
+    score = score_prediction(
+        record=record,
+        generated_tokens=generated_tokens,
+        surface_to_content=surface_to_content,
+    )
+
+    assert not score.content_correct
+    assert not score.exact_match_correct
+    assert (
+        score.register_correct_given_content
+        is None
+    )
+    assert (
+        score.lexical_formality_correct_given_content
+        is None
     )
 
 
