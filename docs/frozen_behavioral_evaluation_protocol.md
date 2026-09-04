@@ -9,6 +9,34 @@ Freeze date: 2026-09-04
 The IID test, compositional-OOD test, and lexical-transfer-OOD test
 results had not been inspected when this protocol was frozen.
 
+## Pre-exposure implementation amendment
+
+During CI testing of the behavioral evaluator, a validation example
+demonstrated that a generated target can contain more than one
+familiarized lexical surface form belonging to the same semantic content
+family.
+
+The initial evaluator implementation incorrectly assumed that a target
+contained exactly one familiarized surface form.
+
+No held-out behavioral evaluation had been launched and no IID,
+compositional-OOD, or lexical-transfer-OOD model result had been
+inspected when this issue was detected.
+
+The content metric was therefore corrected before confirmatory exposure.
+
+The correction does not alter:
+
+- the frozen dataset;
+- the model seeds;
+- the training configuration;
+- the behavioral thresholds;
+- the 2-of-3 seed rule;
+- the held-out splits.
+
+It only makes the scoring implementation agree with the synthetic
+grammar already present in the frozen dataset.
+
 ## Primary dataset
 
 Dataset version: 0.2
@@ -103,9 +131,26 @@ early stopping, or hyperparameter selection.
 Each synthetic semantic content has three lexical surface forms learned
 during lexical familiarization.
 
-A prediction is content-correct when it contains exactly one known
-lexical surface form and that surface form belongs to the same semantic
-content family as the example context.
+A generated target may contain more than one familiarized surface form
+from its semantic content family.
+
+For each evaluation example, the expected number of familiarized lexical
+tokens is determined from the frozen expected target.
+
+A prediction is content-correct when:
+
+- it contains the same number of familiarized lexical tokens as the
+  expected target; and
+- every generated familiarized lexical token belongs to the semantic
+  content family identified by the example context.
+
+This definition treats substitutions among lexical forms belonging to
+the correct semantic family as content-correct while allowing register
+metrics to distinguish whether the appropriate lexical realization was
+used.
+
+Missing lexical tokens, extra lexical tokens, or lexical tokens from a
+different semantic family are content errors.
 
 Content accuracy is the proportion of all examples that are
 content-correct.
@@ -136,10 +181,14 @@ metrics.
 
 For content-correct examples, the evaluator also reports:
 
-- lexical-formality realization accuracy
-- request directness-marker accuracy
-- request mitigation-marker accuracy
-- assertion epistemic-stance-marker accuracy
+- lexical-formality realization accuracy;
+- request directness-marker accuracy;
+- request mitigation-marker accuracy;
+- assertion epistemic-stance-marker accuracy.
+
+Lexical-formality realization is correct when the ordered sequence of
+familiarized lexical forms in the generated target matches the ordered
+sequence in the expected target.
 
 These are diagnostic metrics and do not replace the preregistered
 behavioral gate.
