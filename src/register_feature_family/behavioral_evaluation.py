@@ -293,22 +293,17 @@ def build_surface_to_content(
     return surface_to_content
 
 
-def _single_surface_form(
+def _surface_forms(
     tokens: Sequence[str],
     surface_to_content: Mapping[str, str],
-) -> str | None:
-    """Return the unique lexical surface form, if present."""
+) -> tuple[str, ...]:
+    """Return all familiarized lexical forms in token order."""
 
-    matches = tuple(
+    return tuple(
         token
         for token in tokens
         if token in surface_to_content
     )
-
-    if len(matches) != 1:
-        return None
-
-    return matches[0]
 
 
 def score_prediction(
@@ -327,35 +322,40 @@ def score_prediction(
         record.context_text
     )
 
-    expected_surface = _single_surface_form(
+    expected_surfaces = _surface_forms(
         expected_tokens,
         surface_to_content,
     )
 
-    if expected_surface is None:
+    if not expected_surfaces:
         raise ValueError(
-            "expected target must contain exactly "
+            "expected target must contain at least "
             "one known surface form"
         )
 
-    if (
-        surface_to_content[expected_surface]
+    if any(
+        surface_to_content[surface]
         != expected_content
+        for surface in expected_surfaces
     ):
         raise ValueError(
-            "expected target surface form does not "
-            "match context content"
+            "expected target contains a surface form "
+            "from the wrong content family"
         )
 
-    generated_surface = _single_surface_form(
+    generated_surfaces = _surface_forms(
         generated_tokens,
         surface_to_content,
     )
 
     content_correct = (
-        generated_surface is not None
-        and surface_to_content[generated_surface]
-        == expected_content
+        len(generated_surfaces)
+        == len(expected_surfaces)
+        and all(
+            surface_to_content[surface]
+            == expected_content
+            for surface in generated_surfaces
+        )
     )
 
     exact_match_correct = (
@@ -374,14 +374,12 @@ def score_prediction(
             "context must identify exactly one speech act"
         )
 
-    if (
-        content_correct
-        and generated_surface is not None
-    ):
+    if content_correct:
         register_correct = exact_match_correct
 
         lexical_formality_correct = (
-            generated_surface == expected_surface
+            generated_surfaces
+            == expected_surfaces
         )
 
         if is_request:
