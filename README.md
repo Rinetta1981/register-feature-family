@@ -581,3 +581,13 @@ Rather than interpreting internal features anyway, the study stopped at
 its preregistered behavioral gate.
 
 For mechanistic interpretability, that distinction matters.
+
+## Exploratory Mechanistic Follow-Up
+
+A separate exploratory study investigates how causal interventions on internal transformer activations affect predictions on unfamiliar register combinations.
+
+The study uses activation patching across attention and MLP components. Donor-dependent interventions changed first-token predictions in 12 selected examples.
+
+These results do not establish a register-specific circuit or overturn the original failed behavioral validity gate.
+
+**[View Experiment 3: Register Causal Interventions](https://github.com/Rinetta1981/register-causal-interventions)**
